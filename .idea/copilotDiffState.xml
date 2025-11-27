@@ -3,6 +3,15 @@
   <component name="CopilotDiffPersistence">
     <option name="pendingDiffs">
       <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/mobile_app_project/data/local/LocalDataSource.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/mobile_app_project/data/local/LocalDataSource.kt" />
+              <option name="originalContent" value="package com.example.mobile_app_project.data.local&#10;&#10;/**&#10; * Skeleton for local persistence (e.g., DataStore).&#10; */&#10;class LocalDataSource {&#10;    // TODO: implement persistence operations&#10;}&#10;&#10;" />
+              <option name="updatedContent" value="package com.example.mobile_app_project.data.local&#10;&#10;import android.content.Context&#10;import androidx.datastore.preferences.core.Preferences&#10;import androidx.datastore.preferences.core.edit&#10;import androidx.datastore.preferences.core.stringPreferencesKey&#10;import androidx.datastore.preferences.preferencesDataStore&#10;import kotlinx.coroutines.flow.Flow&#10;import kotlinx.coroutines.flow.map&#10;&#10;// Extension DataStore instance bound to Context&#10;val Context.dataStore by preferencesDataStore(name = &quot;user_prefs&quot;)&#10;&#10;/**&#10; * Simple preferences helper for storing last used city name.&#10; */&#10;class UserPreferences(private val context: Context) {&#10;&#10;    private val LAST_CITY_KEY = stringPreferencesKey(&quot;last_city_name&quot;)&#10;&#10;    suspend fun saveLastCityName(name: String) {&#10;        context.dataStore.edit { prefs: Preferences -&gt;&#10;            prefs[LAST_CITY_KEY] = name&#10;        }&#10;    }&#10;&#10;    fun observeLastCityName(): Flow&lt;String?&gt; =&#10;        context.dataStore.data.map { prefs -&gt;&#10;            prefs[LAST_CITY_KEY]&#10;        }&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/example/mobile_app_project/ui/screens/detail/DetailScreen.kt">
           <value>
             <PendingDiffInfo>
