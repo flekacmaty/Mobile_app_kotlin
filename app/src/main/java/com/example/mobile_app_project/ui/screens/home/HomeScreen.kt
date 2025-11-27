@@ -8,12 +8,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.mobile_app_project.data.repository.model.WeatherData
 import com.example.mobile_app_project.ui.navigation.NavigationDestinations
 import com.example.mobile_app_project.viewmodel.WeatherViewModel
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Composable
 fun HomeScreen(
@@ -21,6 +25,7 @@ fun HomeScreen(
     viewModel: WeatherViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val json = remember { Json { ignoreUnknownKeys = true } }
 
     Column(
         modifier = Modifier
@@ -41,8 +46,13 @@ fun HomeScreen(
                 Text("Vyhledat počasí")
             }
             Button(onClick = {
-                // Navigate to Detail; for now, without args; can be extended to pass serialized data
-                navController.navigate(NavigationDestinations.DETAIL)
+                val data: WeatherData? = uiState.weatherData
+                if (data != null) {
+                    val payload = json.encodeToString(data)
+                    navController.navigate("${NavigationDestinations.DETAIL}?data=${payload}")
+                } else {
+                    navController.navigate(NavigationDestinations.DETAIL)
+                }
             }) {
                 Text("Detail")
             }
