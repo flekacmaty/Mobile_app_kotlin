@@ -76,6 +76,9 @@ dependencies {
     // OkHttp (for MediaType extension)
     implementation(libs.okhttp)
 
+    // AndroidX SplashScreen API
+    implementation(libs.androidx.core.splashscreen)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
