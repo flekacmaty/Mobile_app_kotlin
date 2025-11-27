@@ -1,0 +1,24 @@
+package com.example.mobile_app_project.data.repository.model
+
+// Simple domain models used by Repository and UI/ViewModel layers
+
+data class CityCoordinates(
+    val name: String,
+    val latitude: Double,
+    val longitude: Double
+)
+
+data class HourlyWeather(
+    val time: String,
+    val temperature: Double,
+    val humidity: Double?,
+    val windSpeed: Double
+)
+
+data class WeatherData(
+    val currentTemp: Double,
+    val currentWind: Double,
+    val currentHumidity: Double?,
+    val hourly: List<HourlyWeather>
+)
+
