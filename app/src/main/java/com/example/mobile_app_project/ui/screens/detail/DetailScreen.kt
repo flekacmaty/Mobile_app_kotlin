@@ -68,6 +68,11 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
 
     val grouped = remember(weatherData) { weatherData?.let { groupHourlyNext3Days(it.hourly) } ?: emptyList() }
 
+    // Hoist unit prefs to composable scope (not inside LazyColumn builder)
+    val prefs = UserPreferences(context)
+    val tempUnit by prefs.observeTemperatureUnit().collectAsState(initial = "C")
+    val windUnit by prefs.observeWindUnit().collectAsState(initial = "m_s")
+
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (weatherData != null) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -87,9 +92,14 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
                 }
             }
             Card(colors = CardDefaults.cardColors(containerColor = CloudWhite), modifier = Modifier.padding(top = 8.dp)) {
+                val prefs = UserPreferences(context)
+                val displayTemp = if (tempUnit == "F") (weatherData.currentTemperature ?: 0.0) * 9 / 5 + 32 else (weatherData.currentTemperature ?: 0.0)
+                val displayWind = if (windUnit == "km_h") ((weatherData.currentWindSpeed ?: 0.0) * 3.6) else (weatherData.currentWindSpeed ?: 0.0)
+                val windLabel = if (windUnit == "km_h") "km/h" else "m/s"
+                val tempLabel = if (tempUnit == "F") "°F" else "°C"
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(text = "Teplota: ${weatherData.currentTemperature ?: 0.0} °C", color = TextDark, fontWeight = FontWeight.Medium)
-                    Text(text = "Vítr: ${weatherData.currentWindSpeed ?: 0.0} m/s", color = TextSecondary)
+                    Text(text = "Teplota: ${String.format("%.1f", displayTemp)} $tempLabel", color = TextDark, fontWeight = FontWeight.Medium)
+                    Text(text = "Vítr: ${String.format("%.1f", displayWind)} $windLabel", color = TextSecondary)
                     Text(text = "Vlhkost: ${weatherData.currentHumidity ?: 0.0} %", color = TextSecondary)
                 }
             }
@@ -101,6 +111,8 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
                     item { Text(text = "Den ${dayIndex + 1}", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 8.dp)) }
                     itemsIndexed(itemsForDay) { _, hour: HourlyWeather ->
                         val timeLabel = hour.time.substringAfter('T').take(5) // HH:MM
+                        val displayTemp = if (tempUnit == "F") (hour.temperature) * 9 / 5 + 32 else hour.temperature
+                        val tempLabel = if (tempUnit == "F") "°F" else "°C"
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -108,7 +120,7 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(timeLabel, color = TextDark)
-                            Text("${hour.temperature} °C", color = TextSecondary)
+                            Text("${String.format("%.1f", displayTemp)} $tempLabel", color = TextSecondary)
                         }
                     }
                 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.mobile_app_project.data.local.UserPreferences
 import com.example.mobile_app_project.data.repository.model.WeatherData
 import com.example.mobile_app_project.ui.navigation.NavigationDestinations
 import com.example.mobile_app_project.ui.theme.CloudWhite
@@ -92,10 +93,19 @@ fun HomeScreen(
         }
 
         uiState.weatherData?.let { data ->
+            val prefs = UserPreferences(context)
+            val tempUnit by prefs.observeTemperatureUnit().collectAsState(initial = "C")
+            val windUnit by prefs.observeWindUnit().collectAsState(initial = "m_s")
+
+            val displayTemp = if (tempUnit == "F") (data.currentTemperature ?: 0.0) * 9 / 5 + 32 else (data.currentTemperature ?: 0.0)
+            val displayWind = if (windUnit == "km_h") ((data.currentWindSpeed ?: 0.0) * 3.6) else (data.currentWindSpeed ?: 0.0)
+            val windLabel = if (windUnit == "km_h") "km/h" else "m/s"
+            val tempLabel = if (tempUnit == "F") "°F" else "°C"
+
             Card(colors = CardDefaults.cardColors(containerColor = CloudWhite)) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(text = "Teplota: ${data.currentTemperature ?: 0.0} °C", color = TextDark)
-                    Text(text = "Vítr: ${data.currentWindSpeed ?: 0.0} m/s", color = TextSecondary)
+                    Text(text = "Teplota: ${String.format("%.1f", displayTemp)} $tempLabel", color = TextDark)
+                    Text(text = "Vítr: ${String.format("%.1f", displayWind)} $windLabel", color = TextSecondary)
                 }
             }
         }

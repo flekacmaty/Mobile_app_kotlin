@@ -1,5 +1,6 @@
 package com.example.mobile_app_project.ui.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,13 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import android.net.Uri
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.mobile_app_project.data.local.UserPreferences
@@ -27,7 +30,7 @@ fun SettingsScreen(
     navController: NavController,
     settingsViewModel: com.example.mobile_app_project.viewmodel.SettingsViewModel
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val prefs = UserPreferences(context)
     val scope = CoroutineScope(Dispatchers.IO)
 
@@ -50,14 +53,19 @@ fun SettingsScreen(
             RowWithRadio(label = "m/s", selected = windUnit == "m_s") { scope.launch { prefs.setWindUnit("m_s") } }
             RowWithRadio(label = "km/h", selected = windUnit == "km_h") { scope.launch { prefs.setWindUnit("km_h") } }
         }
-        Divider()
+        HorizontalDivider()
         Text("Hledané (posledních 20)")
         if (recentCities.isEmpty()) {
             Text("Žádné položky")
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 items(recentCities) { name ->
-                    Text(text = name)
+                    Text(
+                        text = name,
+                        modifier = Modifier.clickable {
+                            navController.navigate("detail?cityName=${Uri.encode(name)}&lat=&lon=")
+                        }
+                    )
                 }
             }
         }
