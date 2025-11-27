@@ -1,5 +1,15 @@
 package com.example.mobile_app_project.viewmodel
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.location.Location
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_app_project.data.local.UserPreferences
@@ -61,5 +71,45 @@ class WeatherViewModel(
         }, onFailure = { err ->
             _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Unknown error")
         })
+    }
+
+    fun loadWeatherForCurrentLocation(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            val coords = getCurrentCoordinates(context)
+            if (coords != null) {
+                val (lat, lon) = coords
+                repository.getForecastForCoordinates(lat, lon).fold(onSuccess = { data ->
+                    _uiState.value = _uiState.value.copy(isLoading = false, weatherData = data, errorMessage = null)
+                }, onFailure = { err ->
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Unknown error")
+                })
+            } else {
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Nelze získat aktuální polohu (zkontrolujte oprávnění)")
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun getCurrentCoordinates(context: Context): Pair<Double, Double>? {
+        val fineGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!fineGranted && !coarseGranted) return null
+
+        val fused = LocationServices.getFusedLocationProviderClient(context)
+        // Try lastLocation first
+        val last = suspendCancellableCoroutine<Location?> { cont ->
+            fused.lastLocation.addOnSuccessListener { loc ->
+                if (!cont.isCancelled) cont.resume(loc)
+            }.addOnFailureListener { e ->
+                if (!cont.isCancelled) cont.resume(null)
+            }
+        }
+        val loc = last ?: suspendCancellableCoroutine<Location?> { cont ->
+            fused.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+                .addOnSuccessListener { l -> if (!cont.isCancelled) cont.resume(l) }
+                .addOnFailureListener { e -> if (!cont.isCancelled) cont.resume(null) }
+        }
+        return loc?.let { it.latitude to it.longitude }
     }
 }

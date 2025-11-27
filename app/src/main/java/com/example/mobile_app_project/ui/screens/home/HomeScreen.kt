@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.mobile_app_project.data.repository.model.WeatherData
@@ -26,6 +27,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val json = remember { Json { ignoreUnknownKeys = true } }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -55,6 +57,9 @@ fun HomeScreen(
                 }
             }) {
                 Text("Detail")
+            }
+            Button(onClick = { viewModel.loadWeatherForCurrentLocation(context) }) {
+                Text("Počasí zde")
             }
         }
 
