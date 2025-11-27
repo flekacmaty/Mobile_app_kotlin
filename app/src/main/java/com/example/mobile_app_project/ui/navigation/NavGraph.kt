@@ -46,8 +46,9 @@ object NavigationDestinations {
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     val context = LocalContext.current
-    val weatherViewModel = remember { WeatherViewModel(WeatherRepository(), UserPreferences(context)) }
-    val settingsViewModel = remember { SettingsViewModel(UserPreferences(context)) }
+    val userPreferences = remember { UserPreferences(context) }
+    val weatherViewModel = remember { WeatherViewModel(WeatherRepository(), userPreferences) }
+    val settingsViewModel = remember { SettingsViewModel(userPreferences) }
 
     val items = listOf(NavigationDestinations.HOME, NavigationDestinations.FAVORITES, NavigationDestinations.SETTINGS)
     val backStack = navController.currentBackStackEntryAsState()
@@ -75,7 +76,14 @@ fun AppNavGraph(navController: NavHostController) {
                                 else -> Icon(Icons.Filled.Home, contentDescription = null)
                             }
                         },
-                        label = { Text(route.replaceFirstChar { it.uppercase() }) }
+                        label = { Text(
+                            when (route) {
+                                NavigationDestinations.HOME -> "Domů"
+                                NavigationDestinations.FAVORITES -> "Oblíbené"
+                                NavigationDestinations.SETTINGS -> "Nastavení"
+                                else -> route
+                            }
+                        ) }
                     )
                 }
             }
@@ -84,7 +92,7 @@ fun AppNavGraph(navController: NavHostController) {
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             NavHost(navController = navController, startDestination = NavigationDestinations.HOME) {
                 composable(NavigationDestinations.HOME) { HomeScreen(navController, weatherViewModel) }
-                composable(NavigationDestinations.FAVORITES) { FavoritesScreen(navController, settingsViewModel, weatherViewModel) }
+                composable(NavigationDestinations.FAVORITES) { FavoritesScreen(navController, weatherViewModel, userPreferences) }
                 composable(
                     route = NavigationDestinations.DETAIL + "?cityName={cityName}&lat={lat}&lon={lon}",
                     arguments = listOf(

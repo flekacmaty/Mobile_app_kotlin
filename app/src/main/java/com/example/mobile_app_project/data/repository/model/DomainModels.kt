@@ -22,6 +22,8 @@ data class HourlyWeather(
 @Serializable
 data class WeatherData(
     val cityName: String,
+    val latitude: Double,
+    val longitude: Double,
     val currentTemperature: Double?,
     val currentWindSpeed: Double?,
     val currentHumidity: Double?,

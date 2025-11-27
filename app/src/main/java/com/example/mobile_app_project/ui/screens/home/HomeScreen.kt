@@ -12,6 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,8 +36,16 @@ fun HomeScreen(
     viewModel: WeatherViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val json = remember { Json { ignoreUnknownKeys = true } }
     val context = LocalContext.current
+
+    // Auto-load current location weather on first composition
+    var autoLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = uiState.weatherData) {
+        if (!autoLoaded && uiState.weatherData == null) {
+            viewModel.loadWeatherForCurrentLocation(context)
+            autoLoaded = true
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -44,11 +56,12 @@ fun HomeScreen(
     ) {
         // Header
         Text(
-            text = "Počasí",
+            text = "Aktuální počasí",
             style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
             color = androidx.compose.material3.MaterialTheme.colorScheme.primary
         )
 
+        // Search input stays only for navigation to detail, not affecting Home data
         OutlinedTextField(
             value = uiState.cityName,
             onValueChange = { viewModel.onCityNameChange(it) },
@@ -59,29 +72,11 @@ fun HomeScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
                 val name = uiState.cityName.trim()
-                if (name.isEmpty()) {
-                    // nastavíme error do UI stavu
-                    // ...optional: viewModel.onCityNameChange(name) already clears error
-                } else {
+                if (name.isNotEmpty()) {
                     viewModel.searchAndNavigate(name, navController)
                 }
-            }) {
-                Text("Vyhledat počasí")
-            }
-            Button(onClick = {
-                val data: WeatherData? = uiState.weatherData
-                if (data != null) {
-                    val payload = json.encodeToString(data)
-                    navController.navigate("${NavigationDestinations.DETAIL}?data=${Uri.encode(payload)}")
-                } else {
-                    navController.navigate(NavigationDestinations.DETAIL)
-                }
-            }) {
-                Text("Detail")
-            }
-            Button(onClick = { viewModel.loadWeatherForCurrentLocation(context) }) {
-                Text("Počasí zde")
-            }
+            }) { Text("Vyhledat počasí") }
+            Button(onClick = { viewModel.loadWeatherForCurrentLocation(context) }) { Text("Počasí zde") }
         }
 
         if (uiState.isLoading) {
@@ -99,8 +94,8 @@ fun HomeScreen(
         uiState.weatherData?.let { data ->
             Card(colors = CardDefaults.cardColors(containerColor = CloudWhite)) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(text = "Aktuální teplota: ${data.currentTemp} °C", color = TextDark)
-                    Text(text = "Vítr: ${data.currentWind} m/s", color = TextSecondary)
+                    Text(text = "Teplota: ${data.currentTemperature ?: 0.0} °C", color = TextDark)
+                    Text(text = "Vítr: ${data.currentWindSpeed ?: 0.0} m/s", color = TextSecondary)
                 }
             }
         }

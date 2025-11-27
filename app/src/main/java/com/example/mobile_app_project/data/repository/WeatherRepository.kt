@@ -62,6 +62,8 @@ fun ForecastResponse.toWeatherData(cityName: String): WeatherData {
 
     return WeatherData(
         cityName = cityName,
+        latitude = latitude,
+        longitude = longitude,
         currentTemperature = currentBlock?.temperature2m,
         currentWindSpeed = currentBlock?.windSpeed10m,
         currentHumidity = currentBlock?.relativeHumidity2m,

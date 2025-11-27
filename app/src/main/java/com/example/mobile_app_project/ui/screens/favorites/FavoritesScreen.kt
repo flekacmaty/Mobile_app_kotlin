@@ -1,5 +1,7 @@
 package com.example.mobile_app_project.ui.screens.favorites
 
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,39 +15,41 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mobile_app_project.data.repository.WeatherRepository
+import com.example.mobile_app_project.data.local.UserPreferences
 import com.example.mobile_app_project.data.repository.model.CityCoordinates
-import com.example.mobile_app_project.viewmodel.SettingsViewModel
 import com.example.mobile_app_project.ui.navigation.NavigationDestinations
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.example.mobile_app_project.viewmodel.WeatherViewModel
 
 @Composable
 fun FavoritesScreen(
     navController: NavController,
-    settingsViewModel: SettingsViewModel,
-    weatherViewModel: com.example.mobile_app_project.viewmodel.WeatherViewModel
+    weatherViewModel: WeatherViewModel,
+    preferences: UserPreferences
 ) {
-    val favoritesJson by settingsViewModel.lastCityFlow.collectAsState(initial = null) // placeholder; replace with observeFavorites
-    val json = Json { ignoreUnknownKeys = true }
+    val favorites by preferences.observeFavoritesList().collectAsState(initial = emptyList())
 
-    val favorites: List<CityCoordinates> = favoritesJson?.let {
-        runCatching { json.decodeFromString<List<CityCoordinates>>(it) }.getOrNull()
-    } ?: emptyList()
-
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("Oblíbená města", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
         if (favorites.isEmpty()) {
             Text("Žádná oblíbená města")
         } else {
-            LazyColumn {
-                items(favorites) { city ->
-                    Text(text = city.name, modifier = Modifier.padding(vertical = 8.dp))
-                    // On click navigate to detail with params
-                    // navController.navigate("${NavigationDestinations.DETAIL}?cityName=${city.name}&lat=${city.latitude}&lon=${city.longitude}")
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(favorites) { city: CityCoordinates ->
+                    Text(
+                        text = city.name,
+                        modifier = Modifier
+                            .clickable {
+                                navController.navigate(
+                                    "${NavigationDestinations.DETAIL}?cityName=${Uri.encode(city.name)}&lat=${city.latitude}&lon=${city.longitude}".trim()
+                                )
+                            }
+                            .padding(vertical = 8.dp)
+                    )
                 }
             }
         }
     }
 }
-

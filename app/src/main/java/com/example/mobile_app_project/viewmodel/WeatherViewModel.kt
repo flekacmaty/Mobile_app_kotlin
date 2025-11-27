@@ -29,24 +29,14 @@ class WeatherViewModel(
     private val _uiState = MutableStateFlow(WeatherUiState())
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
-    init {
-        // Load last city from DataStore on startup
-        viewModelScope.launch {
-            preferences.observeLastCityName()
-                .filterNotNull()
-                .collect { lastCity ->
-                    if (lastCity.isNotBlank()) {
-                        _uiState.value = _uiState.value.copy(cityName = lastCity)
-                        loadWeatherForCity(lastCity)
-                    }
-                }
-        }
-    }
+    // Remove auto-load of last city to keep Home showing only current location weather
+    // init { /* intentionally disabled */ }
 
     fun onCityNameChange(name: String) {
         _uiState.value = _uiState.value.copy(cityName = name, errorMessage = null)
     }
 
+    // Keep method for loading by city if needed elsewhere (e.g., Detail)
     fun loadWeatherForCity(name: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
@@ -66,7 +56,8 @@ class WeatherViewModel(
         preferences.saveLastCityName(city.name)
         val forecastResult = repository.getWeatherForCoordinates(city.latitude, city.longitude, city.name)
         forecastResult.fold(onSuccess = { data: WeatherData ->
-            _uiState.value = _uiState.value.copy(isLoading = false, weatherData = data, errorMessage = null)
+            // Do not override Home's current location weather if search triggered
+            _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null)
         }, onFailure = { err ->
             _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Unknown error")
         })
@@ -96,18 +87,17 @@ class WeatherViewModel(
         if (!fineGranted && !coarseGranted) return null
 
         val fused = LocationServices.getFusedLocationProviderClient(context)
-        // Try lastLocation first
         val last = suspendCancellableCoroutine<Location?> { cont ->
             fused.lastLocation.addOnSuccessListener { loc ->
                 if (!cont.isCancelled) cont.resume(loc)
-            }.addOnFailureListener { e ->
+            }.addOnFailureListener { _ ->
                 if (!cont.isCancelled) cont.resume(null)
             }
         }
         val loc = last ?: suspendCancellableCoroutine<Location?> { cont ->
             fused.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
                 .addOnSuccessListener { l -> if (!cont.isCancelled) cont.resume(l) }
-                .addOnFailureListener { e -> if (!cont.isCancelled) cont.resume(null) }
+                .addOnFailureListener { _ -> if (!cont.isCancelled) cont.resume(null) }
         }
         return loc?.let { it.latitude to it.longitude }
     }
@@ -116,13 +106,11 @@ class WeatherViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             repository.getWeatherForCityName(name).fold(onSuccess = { data: WeatherData ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    cityName = data.cityName,
-                    weatherData = data,
-                    errorMessage = null
-                )
-                navController.navigate("detail?cityName=${data.cityName}&lat=&lon=")
+                // Add to recent searches
+                preferences.addRecentCity(data.cityName)
+                // Do not set weatherData to keep Home pinned to current location
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null)
+                navController.navigate("detail?cityName=${data.cityName}&lat=${data.latitude}&lon=${data.longitude}")
             }, onFailure = { err ->
                 _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "City not found")
             })
