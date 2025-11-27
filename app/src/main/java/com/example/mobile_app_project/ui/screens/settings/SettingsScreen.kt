@@ -21,6 +21,7 @@ import android.net.Uri
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.mobile_app_project.data.local.UserPreferences
+import com.example.mobile_app_project.data.repository.WeatherRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,7 +64,18 @@ fun SettingsScreen(
                     Text(
                         text = name,
                         modifier = Modifier.clickable {
-                            navController.navigate("detail?cityName=${Uri.encode(name)}&lat=&lon=")
+                            // Resolve coordinates via repository before navigating
+                            val repo = WeatherRepository()
+                            // This is a Composable context; use IO coroutine scope
+                            scope.launch {
+                                val result = repo.searchCityByName(name)
+                                result.fold(onSuccess = { city ->
+                                    navController.navigate("detail?cityName=${Uri.encode(city.name)}&lat=${city.latitude}&lon=${city.longitude}")
+                                }, onFailure = {
+                                    // Optionally show error, but navigate with name fallback
+                                    navController.navigate("detail?cityName=${Uri.encode(name)}&lat=&lon=")
+                                })
+                            }
                         }
                     )
                 }

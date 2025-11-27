@@ -41,10 +41,18 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
     }
 
     LaunchedEffect(key1 = cityName, key2 = lat, key3 = lon) {
-        if (viewModel != null && lat != null && lon != null) {
-            viewModel.onCityNameChange(cityName)
-            // přímo načteme forecast pro dané souřadnice
-            viewModel.loadWeatherForCity(cityName)
+        if (viewModel != null) {
+            when {
+                lat != null && lon != null -> {
+                    viewModel.onCityNameChange(cityName)
+                    viewModel.loadForecastForCoordinates(lat, lon, cityName)
+                }
+                cityName.isNotBlank() -> {
+                    // Fallback: load by city name (from history) when lat/lon are missing
+                    viewModel.onCityNameChange(cityName)
+                    viewModel.loadWeatherForCityDetail(cityName)
+                }
+            }
         }
     }
 

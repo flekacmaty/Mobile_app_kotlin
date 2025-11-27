@@ -116,4 +116,39 @@ class WeatherViewModel(
             })
         }
     }
+
+    // Explicitly load forecast for given coordinates (used by Detail)
+    fun loadForecastForCoordinates(lat: Double, lon: Double, cityNameHint: String? = null) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            repository.getWeatherForCoordinates(lat, lon, cityNameHint ?: "")
+                .fold(onSuccess = { data: WeatherData ->
+                    _uiState.value = _uiState.value.copy(isLoading = false, weatherData = data, errorMessage = null)
+                }, onFailure = { err ->
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Unknown error")
+                })
+        }
+    }
+
+    // Load weather by city for Detail (sets weatherData)
+    fun loadWeatherForCityDetail(name: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            repository.searchCityByName(name).fold(
+                onSuccess = { city: com.example.mobile_app_project.data.repository.model.CityCoordinates ->
+                    repository.getWeatherForCoordinates(city.latitude, city.longitude, city.name).fold(
+                        onSuccess = { data ->
+                            _uiState.value = _uiState.value.copy(isLoading = false, weatherData = data, errorMessage = null)
+                        },
+                        onFailure = { err ->
+                            _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Unknown error")
+                        }
+                    )
+                },
+                onFailure = { err ->
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Unknown error")
+                }
+            )
+        }
+    }
 }

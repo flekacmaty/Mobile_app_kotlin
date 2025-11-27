@@ -42,9 +42,8 @@ fun FavoritesScreen(
                         text = city.name,
                         modifier = Modifier
                             .clickable {
-                                navController.navigate(
-                                    "${NavigationDestinations.DETAIL}?cityName=${Uri.encode(city.name)}&lat=${city.latitude}&lon=${city.longitude}".trim()
-                                )
+                                // Ensure we load the correct city data on detail by passing lat/lon
+                                navController.navigate("${NavigationDestinations.DETAIL}?cityName=${Uri.encode(city.name)}&lat=${city.latitude}&lon=${city.longitude}".trim())
                             }
                             .padding(vertical = 8.dp)
                     )
