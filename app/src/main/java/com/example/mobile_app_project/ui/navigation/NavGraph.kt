@@ -14,6 +14,7 @@ import com.example.mobile_app_project.ui.screens.settings.SettingsScreen
 import com.example.mobile_app_project.data.local.UserPreferences
 import com.example.mobile_app_project.data.repository.WeatherRepository
 import com.example.mobile_app_project.viewmodel.WeatherViewModel
+import com.example.mobile_app_project.viewmodel.SettingsViewModel
 
 /**
  * Navigation destinations and placeholder for future NavHost.
@@ -27,10 +28,11 @@ object NavigationDestinations {
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     val context = LocalContext.current
-    val viewModel = remember { WeatherViewModel(WeatherRepository(), UserPreferences(context)) }
+    val weatherViewModel = remember { WeatherViewModel(WeatherRepository(), UserPreferences(context)) }
+    val settingsViewModel = remember { SettingsViewModel(UserPreferences(context)) }
 
     NavHost(navController = navController, startDestination = NavigationDestinations.HOME) {
-        composable(NavigationDestinations.HOME) { HomeScreen(navController, viewModel) }
+        composable(NavigationDestinations.HOME) { HomeScreen(navController, weatherViewModel) }
         composable(
             route = NavigationDestinations.DETAIL + "?data={data}",
             arguments = listOf(
@@ -40,6 +42,6 @@ fun AppNavGraph(navController: NavHostController) {
             val jsonData = backStackEntry.arguments?.getString("data") ?: ""
             DetailScreen(jsonData)
         }
-        composable(NavigationDestinations.SETTINGS) { SettingsScreen() }
+        composable(NavigationDestinations.SETTINGS) { SettingsScreen(navController, settingsViewModel) }
     }
 }
