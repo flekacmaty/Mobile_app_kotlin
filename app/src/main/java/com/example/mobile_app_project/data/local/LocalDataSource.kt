@@ -1,7 +1,7 @@
 package com.example.mobile_app_project.data.local
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -19,7 +19,7 @@ class UserPreferences(private val context: Context) {
     private val LAST_CITY_KEY = stringPreferencesKey("last_city_name")
 
     suspend fun saveLastCityName(name: String) {
-        context.dataStore.edit { prefs: Preferences ->
+        context.dataStore.edit { prefs: MutablePreferences ->
             prefs[LAST_CITY_KEY] = name
         }
     }
