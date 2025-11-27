@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/mobile_app_project/ui/theme/Color.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/mobile_app_project/ui/theme/Color.kt" />
+              <option name="originalContent" value="package com.example.mobile_app_project.ui.theme&#10;&#10;import androidx.compose.ui.graphics.Color&#10;&#10;val Purple80 = Color(0xFFD0BCFF)&#10;val PurpleGrey80 = Color(0xFFCCC2DC)&#10;val Pink80 = Color(0xFFEFB8C8)&#10;&#10;val Purple40 = Color(0xFF6650a4)&#10;val PurpleGrey40 = Color(0xFF625b71)&#10;val Pink40 = Color(0xFF7D5260)" />
+              <option name="updatedContent" value="package com.example.mobile_app_project.ui.theme&#13;&#10;&#13;&#10;import androidx.compose.ui.graphics.Color&#13;&#10;&#13;&#10;// Light weather theme colors&#13;&#10;val SunnyYellow = Color(0xFFFFC107)&#13;&#10;val SkyBlue = Color(0xFF90CAF9)&#13;&#10;val CloudWhite = Color(0xFFFFFFFF)&#13;&#10;val WindGray = Color(0xFFB0BEC5)&#13;&#10;val TextDark = Color(0xFF212121)&#13;&#10;val TextSecondary = Color(0xFF616161)&#13;&#10;&#13;&#10;val Purple80 = Color(0xFFD0BCFF)&#13;&#10;val PurpleGrey80 = Color(0xFFCCC2DC)&#13;&#10;val Pink80 = Color(0xFFEFB8C8)&#13;&#10;&#13;&#10;val Purple40 = Color(0xFF6650a4)&#13;&#10;val PurpleGrey40 = Color(0xFF625b71)&#13;&#10;val Pink40 = Color(0xFF7D5260)" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
