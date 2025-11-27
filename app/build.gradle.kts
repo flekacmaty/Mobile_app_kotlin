@@ -73,6 +73,9 @@ dependencies {
     // Google Play Services Location
     implementation(libs.play.services.location)
 
+    // OkHttp (for MediaType extension)
+    implementation(libs.okhttp)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
