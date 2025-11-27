@@ -2,4 +2,7 @@
 <resources>
 
     <style name="Theme.Mobile_app_project" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Remove API 31+ attributes from base (minSdk 24) -->
+    <!-- Splash attributes are applied via values-v31/themes.xml only -->
 </resources>
