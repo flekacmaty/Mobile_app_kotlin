@@ -10,6 +10,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -19,18 +21,29 @@ import com.example.mobile_app_project.data.repository.model.WeatherData
 import com.example.mobile_app_project.ui.theme.CloudWhite
 import com.example.mobile_app_project.ui.theme.TextDark
 import com.example.mobile_app_project.ui.theme.TextSecondary
+import com.example.mobile_app_project.viewmodel.WeatherViewModel
 import kotlinx.serialization.json.Json
 
 @Composable
-fun DetailScreen(jsonData: String = "") {
+fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null, viewModel: WeatherViewModel? = null, jsonData: String = "") {
     val json = remember { Json { ignoreUnknownKeys = true } }
-    val weatherData: WeatherData? = remember(jsonData) {
+    val initialData: WeatherData? = remember(jsonData) {
         if (jsonData.isNotBlank()) runCatching { json.decodeFromString<WeatherData>(jsonData) }.getOrNull() else null
     }
 
+    LaunchedEffect(key1 = cityName, key2 = lat, key3 = lon) {
+        if (viewModel != null && lat != null && lon != null) {
+            viewModel.onCityNameChange(cityName)
+            // přímo načteme forecast pro dané souřadnice
+            viewModel.loadWeatherForCity(cityName)
+        }
+    }
+
+    val weatherData = initialData ?: viewModel?.uiState?.collectAsState()?.value?.weatherData
+
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (weatherData != null) {
-            Text(text = "Detail počasí", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            Text(text = cityName.ifBlank { "Detail počasí" }, style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
             Card(colors = CardDefaults.cardColors(containerColor = CloudWhite), modifier = Modifier.padding(top = 8.dp)) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Text(text = "Teplota: ${weatherData.currentTemp} °C", color = TextDark, fontWeight = FontWeight.Medium)
@@ -41,7 +54,7 @@ fun DetailScreen(jsonData: String = "") {
             Text(text = "Hodinová předpověď:", style = androidx.compose.material3.MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
             LazyColumn {
                 items(weatherData.hourly) { hour: HourlyWeather ->
-                    Text(text = "${hour.time} – ${hour.temperature} °C, vítr ${hour.windSpeed} m/s${hour.humidity?.let { ", vlhkost ${it} %" } ?: ""}", modifier = Modifier.padding(vertical = 8.dp))
+                    Text(text = "${hour.dateTime} – ${hour.temperature} °C", modifier = Modifier.padding(vertical = 8.dp))
                 }
             }
         } else {

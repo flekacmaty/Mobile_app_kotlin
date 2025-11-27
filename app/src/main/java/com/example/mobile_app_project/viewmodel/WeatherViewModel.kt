@@ -9,7 +9,6 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_app_project.data.local.UserPreferences
@@ -65,7 +64,7 @@ class WeatherViewModel(
 
     private suspend fun fetchForecastAndPersist(city: CityCoordinates) {
         preferences.saveLastCityName(city.name)
-        val forecastResult = repository.getForecastForCoordinates(city.latitude, city.longitude)
+        val forecastResult = repository.getWeatherForCoordinates(city.latitude, city.longitude, city.name)
         forecastResult.fold(onSuccess = { data: WeatherData ->
             _uiState.value = _uiState.value.copy(isLoading = false, weatherData = data, errorMessage = null)
         }, onFailure = { err ->
@@ -79,7 +78,7 @@ class WeatherViewModel(
             val coords = getCurrentCoordinates(context)
             if (coords != null) {
                 val (lat, lon) = coords
-                repository.getForecastForCoordinates(lat, lon).fold(onSuccess = { data ->
+                repository.getWeatherForCoordinates(lat, lon).fold(onSuccess = { data ->
                     _uiState.value = _uiState.value.copy(isLoading = false, weatherData = data, errorMessage = null)
                 }, onFailure = { err ->
                     _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Unknown error")
@@ -111,5 +110,22 @@ class WeatherViewModel(
                 .addOnFailureListener { e -> if (!cont.isCancelled) cont.resume(null) }
         }
         return loc?.let { it.latitude to it.longitude }
+    }
+
+    fun searchAndNavigate(name: String, navController: androidx.navigation.NavController) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            repository.getWeatherForCityName(name).fold(onSuccess = { data: WeatherData ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    cityName = data.cityName,
+                    weatherData = data,
+                    errorMessage = null
+                )
+                navController.navigate("detail?cityName=${data.cityName}&lat=&lon=")
+            }, onFailure = { err ->
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "City not found")
+            })
+        }
     }
 }

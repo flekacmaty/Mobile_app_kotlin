@@ -13,14 +13,17 @@ data class CityCoordinates(
 
 @Serializable
 data class HourlyWeather(
-    val dateTime: String,
-    val temperature: Double
+    val time: String,
+    val temperature: Double,
+    val humidity: Double?,
+    val windSpeed: Double?
 )
 
 @Serializable
 data class WeatherData(
-    val currentTemp: Double,
-    val currentWind: Double,
+    val cityName: String,
+    val currentTemperature: Double?,
+    val currentWindSpeed: Double?,
     val currentHumidity: Double?,
     val hourly: List<HourlyWeather>
 )

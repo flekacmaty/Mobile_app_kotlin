@@ -1,5 +1,6 @@
 package com.example.mobile_app_project.ui.screens.home
 
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -56,14 +57,22 @@ fun HomeScreen(
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { viewModel.loadWeatherForCity(uiState.cityName) }) {
+            Button(onClick = {
+                val name = uiState.cityName.trim()
+                if (name.isEmpty()) {
+                    // nastavíme error do UI stavu
+                    // ...optional: viewModel.onCityNameChange(name) already clears error
+                } else {
+                    viewModel.searchAndNavigate(name, navController)
+                }
+            }) {
                 Text("Vyhledat počasí")
             }
             Button(onClick = {
                 val data: WeatherData? = uiState.weatherData
                 if (data != null) {
                     val payload = json.encodeToString(data)
-                    navController.navigate("${NavigationDestinations.DETAIL}?data=${payload}")
+                    navController.navigate("${NavigationDestinations.DETAIL}?data=${Uri.encode(payload)}")
                 } else {
                     navController.navigate(NavigationDestinations.DETAIL)
                 }
