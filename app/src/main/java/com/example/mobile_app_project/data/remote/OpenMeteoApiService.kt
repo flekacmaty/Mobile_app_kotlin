@@ -21,8 +21,7 @@ interface OpenMeteoApiService {
         @Query("longitude") longitude: Double,
         // Request both current and hourly variables per docs
         @Query("current") current: String = "temperature_2m,wind_speed_10m",
-        @Query("hourly") hourly: String = "time,temperature_2m,relative_humidity_2m,wind_speed_10m",
+        @Query("hourly") hourly: String = "temperature_2m",
         @Query("timezone") timezone: String = "auto"
     ): ForecastResponse
 }
-

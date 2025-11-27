@@ -13,10 +13,8 @@ data class CityCoordinates(
 
 @Serializable
 data class HourlyWeather(
-    val time: String,
-    val temperature: Double,
-    val humidity: Double?,
-    val windSpeed: Double
+    val dateTime: String,
+    val temperature: Double
 )
 
 @Serializable

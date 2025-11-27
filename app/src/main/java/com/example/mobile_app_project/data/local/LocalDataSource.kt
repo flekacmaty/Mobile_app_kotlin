@@ -17,6 +17,7 @@ val Context.dataStore by preferencesDataStore(name = "user_prefs")
 class UserPreferences(private val context: Context) {
 
     private val LAST_CITY_KEY = stringPreferencesKey("last_city_name")
+    private val FAVORITES_KEY = stringPreferencesKey("favorite_cities_json")
 
     suspend fun saveLastCityName(name: String) {
         context.dataStore.edit { prefs: MutablePreferences ->
@@ -28,4 +29,14 @@ class UserPreferences(private val context: Context) {
         context.dataStore.data.map { prefs ->
             prefs[LAST_CITY_KEY]
         }
+
+    // Favorites stored as JSON array of CityCoordinates
+    fun observeFavorites(): Flow<String?> =
+        context.dataStore.data.map { prefs -> prefs[FAVORITES_KEY] }
+
+    suspend fun setFavoritesJson(json: String) {
+        context.dataStore.edit { prefs: MutablePreferences ->
+            prefs[FAVORITES_KEY] = json
+        }
+    }
 }

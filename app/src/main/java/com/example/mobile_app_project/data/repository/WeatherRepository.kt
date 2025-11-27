@@ -37,42 +37,34 @@ class WeatherRepository {
         val response: ForecastResponse = forecastService.getForecast(
             latitude = lat,
             longitude = lon,
-            current = "temperature_2m,wind_speed_10m",
-            hourly = "time,temperature_2m,relative_humidity_2m,wind_speed_10m",
+            hourly = "temperature_2m",
             timezone = "auto"
         )
-        val current = response.current
         val hourly = response.hourly
-        if (current != null && hourly != null) {
+        if (hourly != null) {
             val hourlyList = mapHourly(hourly)
+            // Current temp/wind nejsou v tomto zjednodušeném volání, nastavíme null/0
             Result.success(
                 WeatherData(
-                    currentTemp = current.temperature2m ?: 0.0,
-                    currentWind = current.windSpeed10m ?: 0.0,
-                    currentHumidity = null, // Open-Meteo current may not include humidity in selected vars
+                    currentTemp = hourly.temperature2m.firstOrNull() ?: 0.0,
+                    currentWind = 0.0,
+                    currentHumidity = null,
                     hourly = hourlyList
                 )
             )
         } else {
-            Result.failure(IllegalStateException("Incomplete forecast data"))
+            Result.failure(IllegalStateException("Nepodařilo se získat předpověď"))
         }
     } catch (t: Throwable) {
         Result.failure(t)
     }
 
-    private fun mapHourly(hourly: com.example.mobile_app_project.data.remote.dto.HourlyWeather): List<HourlyWeather> {
+    fun mapHourly(hourly: com.example.mobile_app_project.data.remote.dto.Hourly): List<HourlyWeather> {
         val times = hourly.time
         val temps = hourly.temperature2m
-        val hums = hourly.relativeHumidity2m
-        val winds = hourly.windSpeed10m
-        val size = listOf(times.size, temps.size, hums.size, winds.size).minOrNull() ?: 0
+        val size = minOf(times.size, temps.size)
         return (0 until size).map { idx ->
-            HourlyWeather(
-                time = times[idx],
-                temperature = temps[idx],
-                humidity = hums.getOrNull(idx),
-                windSpeed = winds[idx]
-            )
+            HourlyWeather(dateTime = times[idx], temperature = temps[idx])
         }
     }
 }
