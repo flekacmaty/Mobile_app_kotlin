@@ -32,6 +32,7 @@ import com.example.mobile_app_project.ui.theme.CardStroke
 import com.example.mobile_app_project.ui.theme.CloudWhite
 import com.example.mobile_app_project.ui.theme.SkyBlueLight
 import com.example.mobile_app_project.ui.theme.TextDark
+import com.example.mobile_app_project.ui.theme.TextSecondary
 import com.example.mobile_app_project.viewmodel.WeatherViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +79,11 @@ fun FavoritesScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(city.name, style = androidx.compose.material3.MaterialTheme.typography.titleMedium, color = TextDark)
-                                Text("${city.latitude}, ${city.longitude}", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    text = "${city.latitude}, ${city.longitude}",
+                                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
+                                )
                             }
                             IconButton(onClick = {
                                 scope.launch { preferences.removeFavorite(city.name) }

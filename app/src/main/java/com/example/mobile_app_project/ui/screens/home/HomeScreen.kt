@@ -135,11 +135,22 @@ fun HomeScreen(
                 colors = TextFieldDefaults.colors(
                     focusedTextColor = TextDark,
                     unfocusedTextColor = TextDark,
-                    focusedLabelColor = TextDark,
-                    unfocusedLabelColor = TextDark,
                     cursorColor = TextDark,
                     focusedIndicatorColor = TextDark,
-                    unfocusedIndicatorColor = TextDark
+                    unfocusedIndicatorColor = TextDark,
+                    focusedContainerColor = CloudWhite,
+                    unfocusedContainerColor = CloudWhite,
+                    disabledContainerColor = CloudWhite,
+                    errorContainerColor = CloudWhite,
+                    focusedLabelColor = TextDark,
+                    unfocusedLabelColor = TextSecondary,
+                    focusedPlaceholderColor = TextSecondary,
+                    unfocusedPlaceholderColor = TextSecondary,
+                    disabledPlaceholderColor = TextSecondary,
+                    focusedSupportingTextColor = TextSecondary,
+                    unfocusedSupportingTextColor = TextSecondary,
+                    disabledTextColor = TextDark,
+                    disabledIndicatorColor = TextSecondary
                 )
             )
 
