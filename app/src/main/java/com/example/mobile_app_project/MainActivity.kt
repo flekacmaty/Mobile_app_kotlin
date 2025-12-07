@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.example.mobile_app_project.ui.navigation.AppNavGraph
+import com.example.mobile_app_project.ui.theme.Mobile_app_projectTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -24,9 +25,11 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val navController = rememberNavController()
-            Surface(color = MaterialTheme.colorScheme.background) {
-                AppNavGraph(navController)
+            Mobile_app_projectTheme {
+                val navController = rememberNavController()
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    AppNavGraph(navController)
+                }
             }
         }
     }
