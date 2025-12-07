@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import android.net.Uri
 
 class WeatherViewModel(
     private val repository: WeatherRepository,
@@ -106,7 +107,6 @@ class WeatherViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             repository.getWeatherForCityName(name).fold(onSuccess = { data: WeatherData ->
-                // Add to recent searches
                 preferences.addRecentCity(
                     CityCoordinates(
                         name = data.cityName,
@@ -114,9 +114,9 @@ class WeatherViewModel(
                         longitude = data.longitude
                     )
                 )
-                // Do not set weatherData to keep Home pinned to current location
                 _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null)
-                navController.navigate("detail?cityName=${data.cityName}&lat=${data.latitude}&lon=${data.longitude}")
+                val encodedName = Uri.encode(data.cityName)
+                navController.navigate("detail?cityName=$encodedName&lat=${data.latitude}&lon=${data.longitude}")
             }, onFailure = { err ->
                 _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "City not found")
             })

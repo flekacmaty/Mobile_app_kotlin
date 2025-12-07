@@ -32,6 +32,10 @@ import com.example.mobile_app_project.data.local.UserPreferences
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.util.LinkedHashMap
 
 @Composable
 fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null, viewModel: WeatherViewModel? = null, jsonData: String = "") {
@@ -61,25 +65,18 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
     val preferences = remember { UserPreferences(context) }
     val scope = remember { CoroutineScope(Dispatchers.IO) }
     val favorites by preferences.observeFavoritesList().collectAsState(initial = emptyList())
+    val tempUnit by preferences.observeTemperatureUnit().collectAsState(initial = "C")
+    val windUnit by preferences.observeWindUnit().collectAsState(initial = "m_s")
     val effectiveCityName = cityName.ifBlank { viewModel?.uiState?.collectAsState()?.value?.cityName ?: cityName }
     val isFavorite = favorites.any { it.name.equals(effectiveCityName, ignoreCase = true) }
 
-    // Helper: group next 3 days
-    fun groupHourlyNext3Days(list: List<HourlyWeather>): List<Pair<String, List<HourlyWeather>>> {
-        val dateMap = LinkedHashMap<String, MutableList<HourlyWeather>>()
-        list.forEach { hw ->
-            val dateKey = hw.time.substringBefore('T') // e.g. 2025-11-27
-            dateMap.getOrPut(dateKey) { mutableListOf() }.add(hw)
-        }
-        return dateMap.entries.take(3).map { it.key to it.value }
+    val futureHourly = remember(weatherData) {
+        val nowTime = LocalDateTime.now()
+        weatherData?.hourly?.filter { hour ->
+            parseHourlyDateTime(hour.time)?.isAfter(nowTime) ?: false
+        } ?: emptyList()
     }
-
-    val grouped = remember(weatherData) { weatherData?.let { groupHourlyNext3Days(it.hourly) } ?: emptyList() }
-
-    // Hoist unit prefs to composable scope (not inside LazyColumn builder)
-    val prefs = UserPreferences(context)
-    val tempUnit by prefs.observeTemperatureUnit().collectAsState(initial = "C")
-    val windUnit by prefs.observeWindUnit().collectAsState(initial = "m_s")
+    val grouped = remember(futureHourly) { groupHourlyNext3Days(futureHourly) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (weatherData != null) {
@@ -100,7 +97,6 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
                 }
             }
             Card(colors = CardDefaults.cardColors(containerColor = CloudWhite), modifier = Modifier.padding(top = 8.dp)) {
-                val prefs = UserPreferences(context)
                 val displayTemp = if (tempUnit == "F") (weatherData.currentTemperature ?: 0.0) * 9 / 5 + 32 else (weatherData.currentTemperature ?: 0.0)
                 val displayWind = if (windUnit == "km_h") ((weatherData.currentWindSpeed ?: 0.0) * 3.6) else (weatherData.currentWindSpeed ?: 0.0)
                 val windLabel = if (windUnit == "km_h") "km/h" else "m/s"
@@ -118,7 +114,9 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
                     val (dateKey, itemsForDay) = pair
                     item { Text(text = "Den ${dayIndex + 1}", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 8.dp)) }
                     itemsIndexed(itemsForDay) { _, hour: HourlyWeather ->
-                        val timeLabel = hour.time.substringAfter('T').take(5) // HH:MM
+                        val parsed = parseHourlyDateTime(hour.time)
+                        val timeLabel = parsed?.toLocalTime()?.format(hourFormatter)
+                            ?: hour.time.substringAfter('T').take(5)
                         val displayTemp = if (tempUnit == "F") (hour.temperature) * 9 / 5 + 32 else hour.temperature
                         val tempLabel = if (tempUnit == "F") "°F" else "°C"
                         Row(
@@ -137,4 +135,20 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
             Text(text = "Bez dat pro detail")
         }
     }
+}
+
+private val hourFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+private fun parseHourlyDateTime(value: String): LocalDateTime? =
+    runCatching { LocalDateTime.parse(value) }.getOrElse {
+        runCatching { OffsetDateTime.parse(value).toLocalDateTime() }.getOrNull()
+    }
+
+private fun groupHourlyNext3Days(list: List<HourlyWeather>): List<Pair<String, List<HourlyWeather>>> {
+    val dateMap = LinkedHashMap<String, MutableList<HourlyWeather>>()
+    list.forEach { hw ->
+        val dateKey = hw.time.substringBefore('T')
+        dateMap.getOrPut(dateKey) { mutableListOf() }.add(hw)
+    }
+    return dateMap.entries.take(3).map { it.key to it.value }
 }

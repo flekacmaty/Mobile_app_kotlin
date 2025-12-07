@@ -17,7 +17,7 @@ class WeatherRepository {
     private val forecastService = OpenMeteoClient.forecast
 
     suspend fun searchCityByName(name: String): Result<CityCoordinates> = try {
-        val response: GeocodingResponse = geocodingService.searchCity(name = name, count = 1)
+        val response: GeocodingResponse = geocodingService.searchCity(name = name.trim(), count = 1)
         val first = response.results?.firstOrNull()
             ?: return Result.failure(IllegalArgumentException("City not found"))
         Result.success(CityCoordinates(first.name, first.latitude, first.longitude))

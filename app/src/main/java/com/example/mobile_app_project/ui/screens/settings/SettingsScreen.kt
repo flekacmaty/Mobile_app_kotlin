@@ -56,12 +56,13 @@ fun SettingsScreen(
                         modifier = Modifier.clickable {
                             val lat = city.latitude
                             val lon = city.longitude
+                            val encodedName = Uri.encode(city.name)
                             if (!lat.isNaN() && !lon.isNaN()) {
                                 weatherViewModel.loadForecastForCoordinates(lat, lon, city.name)
-                                navController.navigate("detail?cityName=${Uri.encode(city.name)}&lat=$lat&lon=$lon")
+                                navController.navigate("detail?cityName=$encodedName&lat=$lat&lon=$lon")
                             } else {
                                 weatherViewModel.loadWeatherForCityDetail(city.name)
-                                navController.navigate("detail?cityName=${Uri.encode(city.name)}&lat=&lon=")
+                                navController.navigate("detail?cityName=$encodedName&lat=&lon=")
                             }
                         }
                     )
