@@ -38,6 +38,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.LinkedHashMap
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null, viewModel: WeatherViewModel? = null, jsonData: String = "") {
@@ -89,7 +90,7 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
         if (weatherData != null) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = effectiveCityName.ifBlank { "Detail počasí" }, style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                    Text(text = effectiveCityName.ifBlank { "Detail počasí" }, style = MaterialTheme.typography.titleLarge, color = TextDark)
                     IconButton(onClick = {
                         scope.launch {
                             if (isFavorite) preferences.removeFavorite(effectiveCityName) else preferences.addFavorite(
@@ -110,17 +111,21 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
                     val windLabel = if (windUnit == "km_h") "km/h" else "m/s"
                     val tempLabel = if (tempUnit == "F") "°F" else "°C"
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                        Text(text = "Teplota: ${String.format("%.1f", displayTemp)} $tempLabel", color = TextDark, fontWeight = FontWeight.Medium)
-                        Text(text = "Vítr: ${String.format("%.1f", displayWind)} $windLabel", color = TextSecondary)
-                        Text(text = "Vlhkost: ${weatherData.currentHumidity ?: 0.0} %", color = TextSecondary)
+                        Text(
+                            text = "Teplota: ${String.format("%.1f", displayTemp)} $tempLabel",
+                            color = TextDark,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(text = "Vítr: ${String.format("%.1f", displayWind)} $windLabel", color = TextDark)
+                        Text(text = "Vlhkost: ${weatherData.currentHumidity ?: 0.0} %", color = TextDark)
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(text = "Předpověď na 3 dny", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text(text = "Předpověď na 3 dny", style = MaterialTheme.typography.titleMedium, color = TextDark)
                 LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
                     grouped.forEachIndexed { dayIndex, pair ->
                         val (dateKey, itemsForDay) = pair
-                        item { Text(text = "Den ${dayIndex + 1}", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 8.dp)) }
+                        item { Text(text = "Den ${dayIndex + 1}", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 8.dp), color = TextDark) }
                         itemsIndexed(itemsForDay) { _, hour: HourlyWeather ->
                             val parsed = parseHourlyDateTime(hour.time)
                             val timeLabel = parsed?.toLocalTime()?.format(hourFormatter)
@@ -134,14 +139,14 @@ fun DetailScreen(cityName: String = "", lat: Double? = null, lon: Double? = null
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(timeLabel, color = TextDark)
-                                Text("${String.format("%.1f", displayTemp)} $tempLabel", color = TextSecondary)
+                                Text("${String.format("%.1f", displayTemp)} $tempLabel", color = TextDark)
                             }
                         }
                     }
                 }
             }
         } else {
-            Text(text = "Bez dat pro detail")
+            Text(text = "Bez dat pro detail", color = TextDark)
         }
     }
 }
