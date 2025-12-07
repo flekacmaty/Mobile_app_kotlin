@@ -3,9 +3,7 @@
     <!-- Apply the splash overlay only on API 31+ -->
     <style name="Theme.Mobile_app_project" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="android:windowSplashScreenBackground">#FFFFFF</item>
-        <item name="android:windowSplashScreenBrandingImage">@mipmap/ic_launcher_round</item>
-        <item name="android:windowSplashScreenIconBackgroundColor">#FFFFFF</item>
+        <item name="android:windowSplashScreenBackground">#FFFFFFFF</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#FFFFFFFF</item>
     </style>
 </resources>
-
