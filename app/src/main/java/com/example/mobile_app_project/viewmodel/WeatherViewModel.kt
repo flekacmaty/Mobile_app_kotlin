@@ -107,7 +107,13 @@ class WeatherViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             repository.getWeatherForCityName(name).fold(onSuccess = { data: WeatherData ->
                 // Add to recent searches
-                preferences.addRecentCity(data.cityName)
+                preferences.addRecentCity(
+                    CityCoordinates(
+                        name = data.cityName,
+                        latitude = data.latitude,
+                        longitude = data.longitude
+                    )
+                )
                 // Do not set weatherData to keep Home pinned to current location
                 _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null)
                 navController.navigate("detail?cityName=${data.cityName}&lat=${data.latitude}&lon=${data.longitude}")

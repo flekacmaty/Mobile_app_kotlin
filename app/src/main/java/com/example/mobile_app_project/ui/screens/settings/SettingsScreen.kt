@@ -1,11 +1,8 @@
 package com.example.mobile_app_project.ui.screens.settings
 
+import android.net.Uri
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -16,28 +13,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import android.net.Uri
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.mobile_app_project.data.local.UserPreferences
-import com.example.mobile_app_project.data.repository.WeatherRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.mobile_app_project.data.repository.model.CityCoordinates
+import com.example.mobile_app_project.viewmodel.SettingsViewModel
+import com.example.mobile_app_project.viewmodel.WeatherViewModel
 
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    settingsViewModel: com.example.mobile_app_project.viewmodel.SettingsViewModel
+    settingsViewModel: SettingsViewModel,
+    weatherViewModel: WeatherViewModel
 ) {
-    val context = LocalContext.current
-    val prefs = UserPreferences(context)
-    val scope = CoroutineScope(Dispatchers.IO)
-
-    val tempUnit by prefs.observeTemperatureUnit().collectAsState(initial = "C")
-    val windUnit by prefs.observeWindUnit().collectAsState(initial = "m_s")
-    val recentCities by prefs.observeRecentCities().collectAsState(initial = emptyList())
+    val tempUnit by settingsViewModel.temperatureUnit.collectAsState(initial = "C")
+    val windUnit by settingsViewModel.windUnit.collectAsState(initial = "m_s")
+    val recentCities by settingsViewModel.recentCities.collectAsState(initial = emptyList())
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -46,13 +36,13 @@ fun SettingsScreen(
         Text("Nastavení", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
         Text("Jednotky teploty")
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            RowWithRadio(label = "Celsius (°C)", selected = tempUnit == "C") { scope.launch { prefs.setTemperatureUnit("C") } }
-            RowWithRadio(label = "Fahrenheit (°F)", selected = tempUnit == "F") { scope.launch { prefs.setTemperatureUnit("F") } }
+            RowWithRadio(label = "Celsius (°C)", selected = tempUnit == "C") { settingsViewModel.setTemperatureUnit("C") }
+            RowWithRadio(label = "Fahrenheit (°F)", selected = tempUnit == "F") { settingsViewModel.setTemperatureUnit("F") }
         }
         Text("Jednotky větru")
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            RowWithRadio(label = "m/s", selected = windUnit == "m_s") { scope.launch { prefs.setWindUnit("m_s") } }
-            RowWithRadio(label = "km/h", selected = windUnit == "km_h") { scope.launch { prefs.setWindUnit("km_h") } }
+            RowWithRadio(label = "m/s", selected = windUnit == "m_s") { settingsViewModel.setWindUnit("m_s") }
+            RowWithRadio(label = "km/h", selected = windUnit == "km_h") { settingsViewModel.setWindUnit("km_h") }
         }
         HorizontalDivider()
         Text("Hledané (posledních 20)")
@@ -60,36 +50,33 @@ fun SettingsScreen(
             Text("Žádné položky")
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                items(recentCities) { name ->
+                items(recentCities) { city: CityCoordinates ->
                     Text(
-                        text = name,
+                        text = city.name,
                         modifier = Modifier.clickable {
-                            // Resolve coordinates via repository before navigating
-                            val repo = WeatherRepository()
-                            // This is a Composable context; use IO coroutine scope
-                            scope.launch {
-                                val result = repo.searchCityByName(name)
-                                result.fold(onSuccess = { city ->
-                                    navController.navigate("detail?cityName=${Uri.encode(city.name)}&lat=${city.latitude}&lon=${city.longitude}")
-                                }, onFailure = {
-                                    // Optionally show error, but navigate with name fallback
-                                    navController.navigate("detail?cityName=${Uri.encode(name)}&lat=&lon=")
-                                })
+                            val lat = city.latitude
+                            val lon = city.longitude
+                            if (!lat.isNaN() && !lon.isNaN()) {
+                                weatherViewModel.loadForecastForCoordinates(lat, lon, city.name)
+                                navController.navigate("detail?cityName=${Uri.encode(city.name)}&lat=$lat&lon=$lon")
+                            } else {
+                                weatherViewModel.loadWeatherForCityDetail(city.name)
+                                navController.navigate("detail?cityName=${Uri.encode(city.name)}&lat=&lon=")
                             }
                         }
                     )
                 }
             }
         }
-        Spacer(modifier = Modifier.padding(4.dp))
-        Button(onClick = { scope.launch { prefs.clearRecentCities() } }) { Text("Smazat historii hledání") }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = { settingsViewModel.clearRecentCities() }) { Text("Smazat historii hledání") }
     }
 }
 
 @Composable
 private fun RowWithRadio(label: String, selected: Boolean, onSelect: () -> Unit) {
-    androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        RadioButton(selected = selected, onClick = { onSelect() })
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        RadioButton(selected = selected, onClick = onSelect)
         Text(label)
     }
 }

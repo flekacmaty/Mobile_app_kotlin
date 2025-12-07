@@ -91,18 +91,28 @@ class UserPreferences(private val context: Context) {
     }
 
     // Recent searches (JSON list of strings)
-    fun observeRecentCities(): Flow<List<String>> = context.dataStore.data.map { prefs ->
-        val raw = prefs[RECENT_CITIES_KEY]
-        if (raw.isNullOrBlank()) emptyList() else runCatching { json.decodeFromString<List<String>>(raw) }.getOrElse { emptyList() }
-    }
-    suspend fun addRecentCity(name: String) {
-        val prefs = context.dataStore.data.first()
-        val raw = prefs[RECENT_CITIES_KEY]
-        val list = if (raw.isNullOrBlank()) mutableListOf<String>() else runCatching { json.decodeFromString<List<String>>(raw) }.getOrElse { mutableListOf() }.toMutableList()
-        val filtered = list.filterNot { it.equals(name, ignoreCase = true) }.toMutableList()
-        filtered.add(0, name)
-        val limited = filtered.take(20)
+    fun observeRecentCities(): Flow<List<CityCoordinates>> =
+        context.dataStore.data.map { prefs -> decodeRecentCities(prefs[RECENT_CITIES_KEY]) }
+
+    suspend fun addRecentCity(city: CityCoordinates) {
+        val current = decodeRecentCities(context.dataStore.data.first()[RECENT_CITIES_KEY])
+            .filterNot { it.name.equals(city.name, ignoreCase = true) }
+            .toMutableList()
+        current.add(0, city)
+        val limited = current.take(20)
         context.dataStore.edit { it[RECENT_CITIES_KEY] = json.encodeToString(limited) }
     }
-    suspend fun clearRecentCities() { context.dataStore.edit { it[RECENT_CITIES_KEY] = json.encodeToString(emptyList<String>()) } }
+
+    suspend fun clearRecentCities() {
+        context.dataStore.edit { it[RECENT_CITIES_KEY] = json.encodeToString(emptyList<CityCoordinates>()) }
+    }
+
+    private fun decodeRecentCities(raw: String?): List<CityCoordinates> {
+        if (raw.isNullOrBlank()) return emptyList()
+        return runCatching { json.decodeFromString<List<CityCoordinates>>(raw) }.getOrElse {
+            runCatching { json.decodeFromString<List<String>>(raw) }
+                .getOrElse { emptyList() }
+                .map { name -> CityCoordinates(name = name, latitude = Double.NaN, longitude = Double.NaN) }
+        }
+    }
 }

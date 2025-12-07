@@ -47,7 +47,8 @@ object NavigationDestinations {
 fun AppNavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val userPreferences = remember { UserPreferences(context) }
-    val weatherViewModel = remember { WeatherViewModel(WeatherRepository(), userPreferences) }
+    val weatherRepository = remember { WeatherRepository() }
+    val weatherViewModel = remember { WeatherViewModel(weatherRepository, userPreferences) }
     val settingsViewModel = remember { SettingsViewModel(userPreferences) }
 
     val items = listOf(NavigationDestinations.HOME, NavigationDestinations.FAVORITES, NavigationDestinations.SETTINGS)
@@ -92,7 +93,9 @@ fun AppNavGraph(navController: NavHostController) {
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             NavHost(navController = navController, startDestination = NavigationDestinations.HOME) {
                 composable(NavigationDestinations.HOME) { HomeScreen(navController, weatherViewModel) }
-                composable(NavigationDestinations.FAVORITES) { FavoritesScreen(navController, weatherViewModel, userPreferences) }
+                composable(NavigationDestinations.FAVORITES) {
+                    FavoritesScreen(navController, weatherViewModel, userPreferences)
+                }
                 composable(
                     route = NavigationDestinations.DETAIL + "?cityName={cityName}&lat={lat}&lon={lon}",
                     arguments = listOf(
@@ -104,11 +107,11 @@ fun AppNavGraph(navController: NavHostController) {
                     val cityName = backStackEntry.arguments?.getString("cityName") ?: ""
                     val latStr = backStackEntry.arguments?.getString("lat") ?: ""
                     val lonStr = backStackEntry.arguments?.getString("lon") ?: ""
-                    val lat = latStr.toDoubleOrNull()
-                    val lon = lonStr.toDoubleOrNull()
-                    DetailScreen(cityName, lat, lon, weatherViewModel, "")
+                    DetailScreen(cityName, latStr.toDoubleOrNull(), lonStr.toDoubleOrNull(), weatherViewModel, "")
                 }
-                composable(NavigationDestinations.SETTINGS) { SettingsScreen(navController, settingsViewModel) }
+                composable(NavigationDestinations.SETTINGS) {
+                    SettingsScreen(navController, settingsViewModel, weatherViewModel)
+                }
             }
         }
     }
